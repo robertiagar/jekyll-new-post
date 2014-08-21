@@ -15,7 +15,7 @@ namespace JekyllPostGenerator
             var postTitle = args[1];
 
 
-            var postService = new PostService(@"C:\Users\Robert\Documents\visual studio 2013\Projects\jekyll-site");
+            var postService = new PostService(repoPath);
 
             postService.NewPost("test post", string.Empty).Wait();
         }

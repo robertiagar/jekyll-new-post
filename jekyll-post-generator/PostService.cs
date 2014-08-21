@@ -1,11 +1,14 @@
 ﻿using LibGit2Sharp;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 
 namespace JekyllPostGenerator
 {
@@ -46,8 +49,39 @@ namespace JekyllPostGenerator
 
             var postFileName = string.Format("{0}-{1}.md", DateTime.Now.ToString("yyyy-MM-dd"), postName.Replace(' ', '-'));
             using (var file = File.CreateText(string.Format("{0}{1}", postsPath, postFileName)))
+            using (var defaultHeader = File.OpenText("default-header.json"))
             {
-                await file.WriteAsync("test");
+                var headerFormat = await defaultHeader.ReadToEndAsync();
+
+                dynamic obj = new DynamicDictionary();
+                obj = JsonConvert.DeserializeAnonymousType<DynamicDictionary>(headerFormat, obj);
+                Console.WriteLine("According to your \"default-header.json\" file you need {0} arguments. Here there are:\n", obj.Count);
+
+                
+                foreach (var item in obj.ToList())
+                {
+                    if(!item.Value.Contains("{"))
+                        Console.Write("{0}: //default is '{1}': ", item.Key, item.Value);
+                    else
+                        Console.Write("{0}: ", item.Key);
+                    
+                    var readValue = Console.ReadLine();
+
+                    if (readValue != string.Empty)
+                        obj.InnerDictionary[item.Key] = readValue;
+                    else
+                    {
+                        if (item.Value != "DateTime.Now")
+                        {
+                            Console.Write("Left default value: {0} for {1}\n", item.Value, item.Key);
+                        }
+                        else
+                        {
+                            obj.InnerDictionary[item.Key] = DateTime.Now;
+                        }
+                    }
+                }
+                Console.ReadLine();
             }
         }
     }
